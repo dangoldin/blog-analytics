@@ -45,8 +45,24 @@ by_month_summary <- summarise(by_month,
   num_words = sum(num_text_words, na.rm = TRUE),
   avg_words = mean(num_text_words, na.rm = TRUE))
 
-ggplot(delay, aes(date_month, num_words)) +
-  geom_bar(stat="identity", aes(size = 1), alpha = 1/2)
+ggplot(by_month_summary, aes(date_month, num_words)) +
+  geom_bar(stat="identity", aes(size = 1), alpha = 1/2) +
+  theme_few() + scale_colour_few() +
+  theme(legend.position="none") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+by_week <- group_by(df, date_week)
+by_week_summary <- summarise(by_week,
+  count = n(),
+  num_words = sum(num_text_words, na.rm = TRUE),
+  avg_words = mean(num_text_words, na.rm = TRUE))
+
+ggplot(by_week_summary, aes(date_week, num_words)) +
+  geom_bar(stat="identity", aes(size = 1), alpha = 1/2) +
+  theme_few() + scale_colour_few() +
+  theme(legend.position="none") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
 
 # Posts over time (day? week? month? year?)
 
