@@ -24,6 +24,8 @@ df = read.csv("/tmp/out.csv", header=TRUE)
 df$date_new <- as.Date(df$date , "%Y-%m-%d")
 df$date_month <- format(df$date_new, "%Y-%m")
 df$date_week <- format(df$date_new, "%Y-%W")
+df$date_year <- format(df$date_new, "%Y")
+df$dow <- weekdays(as.Date(df$date))
 
 names(df)
 
@@ -63,6 +65,33 @@ ggplot(by_week_summary, aes(date_week, num_words)) +
   theme(legend.position="none") +
   theme(axis.text.x = element_text(angle = 90, hjust = 1))
 
+by_dow <- group_by(df, dow)
+by_dow_summary <- summarise(by_dow,
+  count = n(),
+  num_words = sum(num_text_words, na.rm = TRUE),
+  avg_words = mean(num_text_words, na.rm = TRUE))
+
+ggplot(by_dow_summary, aes(dow, count)) +
+  geom_bar(stat="identity", aes(size = 1), alpha = 1/2) +
+  theme_few() + scale_colour_few() +
+  theme(legend.position="none") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+by_dow_year <- group_by(df, dow, date_year)
+by_dow_year_summary <- summarise(by_dow_year,
+  count = n(),
+  num_words = sum(num_text_words, na.rm = TRUE),
+  avg_words = mean(num_text_words, na.rm = TRUE))
+
+ggplot(by_dow_year_summary, aes(x=date_year, y=count, group=dow, color=dow)) +
+  geom_line() +
+  theme_few() + scale_colour_few() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+ggplot(by_dow_year_summary, aes(x=dow, y=count, group=date_year, color=date_year)) +
+  geom_line() +
+  theme_few() + scale_colour_few() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
 
 # Posts over time (day? week? month? year?)
 
