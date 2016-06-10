@@ -7,7 +7,10 @@ install.packages("lattice")
 install.packages("ggthemes")
 install.packages("table")
 install.packages("dplyr")
-install.packages('ggthemes')
+install.packages("ggthemes")
+install.packages("tm")
+install.packages("SnowballC")
+install.packages("wordcloud")
 
 library(ggplot2)
 library(grid)
@@ -19,6 +22,9 @@ library(ggthemes)
 library(data.table)
 library(dplyr)
 library(ggthemes)
+library(tm)
+library(SnowballC)
+library(wordcloud)
 
 df = read.csv("/tmp/out.csv", header=TRUE)
 df$date_new <- as.Date(df$date , "%Y-%m-%d")
@@ -92,6 +98,25 @@ ggplot(by_dow_year_summary, aes(x=dow, y=count, group=date_year, color=date_year
   geom_line() +
   theme_few() + scale_colour_few() +
   theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+corpus <- Corpus(VectorSource(df$keywords))
+corpus <- tm_map(corpus, PlainTextDocument)
+corpus <- tm_map(corpus, removePunctuation)
+corpus <- tm_map(corpus, removeWords, stopwords('english'))
+# corpus <- tm_map(corpus, stemDocument)
+corpus <- tm_map(corpus, removeWords, c('the', 'this', stopwords('english')))
+
+wordcloud(corpus, max.words = 100, random.order = FALSE, scale=c(1,.5))
+
+corpus <- Corpus(VectorSource(df$tags))
+corpus <- tm_map(corpus, PlainTextDocument)
+corpus <- tm_map(corpus, removePunctuation)
+corpus <- tm_map(corpus, removeWords, stopwords('english'))
+# corpus <- tm_map(corpus, stemDocument)
+corpus <- tm_map(corpus, removeWords, c('the', 'this', stopwords('english')))
+
+wordcloud(corpus, max.words = 100, random.order = FALSE, scale=c(1.5,0.5))
+
 
 # Posts over time (day? week? month? year?)
 

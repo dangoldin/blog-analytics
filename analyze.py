@@ -50,7 +50,7 @@ def analyze_content(content):
 
     return {
         'title': title,
-        'tags': tags,
+        'tags': ','.join(tags),
         'keywords': keywords,
         'description': description,
         'text': RE_HTML.sub(' ', text.replace("\n", ' ')).strip(),
