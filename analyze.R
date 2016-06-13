@@ -144,7 +144,7 @@ plot_by <- function(df, col_names, col1lbl, col2lbl) {
       xlab(col1lbl) + ylab("Num Tags") + ggtitle("Tags over time")
     # multiplot(p1, p2, p3, p4, cols=2)
     ggsave(filename=paste(list("/tmp/", fn, "-plot-count.png"), collapse=''), plot=p1)
-    ggsave(filename=paste(list("/tmp/", fn, "-plot-keywords.png"), collapse=''), plot=p2)
+    ggsave(filename=paste(list("/tmp/", fn, "-plot-words.png"), collapse=''), plot=p2)
     ggsave(filename=paste(list("/tmp/", fn, "-plot-links.png"), collapse=''), plot=p3)
     ggsave(filename=paste(list("/tmp/", fn, "-plot-tags.png"), collapse=''), plot=p4)
   }
@@ -158,7 +158,7 @@ plot_wordcloud <- function(text_col, fn) {
   # corpus <- tm_map(corpus, stemDocument)
   corpus <- tm_map(corpus, removeWords, c('the', 'this', stopwords('english')))
   
-  png(fn, width=8, height=8, units="in", res=300)
+  png(fn, width=2, height=2, units="in", res=300)
   wordcloud(corpus, max.words = 100, random.order = FALSE, scale=c(1,.5))
   dev.off()
 }
@@ -186,10 +186,9 @@ ggplot(data=df, aes(x=num_images, y=num_links)) +
 
 # DOW vs Date Year
 plot_by(df, list("dow", "date_year"), "Day of Week", "Year")
-plot_by(df, list("date_year", "dow"), "Year", "Day of Week")
 
 # Word Clouds
-plot_wordcloud(df$keywords, "/tmp/wordcloud")
+plot_wordcloud(df$keywords, "/tmp/wordcloud.png")
 plot_wordcloud(df[df$date_year == "2013", ]$keywords, "/tmp/wordcloud_2013.png")
 plot_wordcloud(df[df$date_year == "2014", ]$keywords, "/tmp/wordcloud_2014.png")
 plot_wordcloud(df[df$date_year == "2015", ]$keywords, "/tmp/wordcloud_2015.png")
@@ -209,3 +208,46 @@ plot_has(df, "Python")
 plot_has(df, "SQL")
 plot_has(df, "JavaScript")
 plot_has(df, "Scala")
+
+# Company mentions
+df$has_google <- grepl("Google[ \\.]", df$text, ignore.case = TRUE)  * 1
+df$has_facebook <- grepl("Facebook[ \\.]", df$text, ignore.case = TRUE)  * 1
+df$has_twitter <- grepl("Twitter[ \\.]", df$text, ignore.case = TRUE)  * 1
+df$has_microsoft <- grepl("Microsoft[ \\.]", df$text, ignore.case = TRUE)  * 1
+df$has_uber <- grepl("Uber[ \\.]", df$text, ignore.case = TRUE)  * 1
+df$has_snapchat <- grepl("Snapchat[ \\.]", df$text, ignore.case = TRUE)  * 1
+
+# Language mentions
+df$has_java <- grepl("Java[ \\.]", df$text, ignore.case = TRUE)  * 1
+df$has_python <- grepl("Python[ \\.]", df$text, ignore.case = TRUE)  * 1
+df$has_sql <- grepl("SQL[ \\.]", df$text, ignore.case = TRUE)  * 1
+df$has_javascript <- grepl("JavaScript[ \\.]", df$text, ignore.case = TRUE)  * 1
+df$has_scala <- grepl("Scala[ \\.]", df$text, ignore.case = TRUE)  * 1
+
+df_year <- as.data.frame(df %>% group_by(date_year) %>% summarise(Google = sum(has_google, na.rm = TRUE),
+                                                                  Facebook = sum(has_facebook, na.rm = TRUE),
+                                                                  Twitter = sum(has_twitter, na.rm = TRUE),
+                                                                  Microsoft = sum(has_microsoft, na.rm = TRUE),
+                                                                  Snapchat = sum(has_snapchat, na.rm = TRUE),
+                                                                  Uber = sum(has_uber, na.rm = TRUE),
+                                                                  Java = sum(has_java, na.rm = TRUE),
+                                                                  Python = sum(has_python, na.rm = TRUE),
+                                                                  SQL = sum(has_sql, na.rm = TRUE),
+                                                                  JavaScript = sum(has_javascript, na.rm = TRUE),
+                                                                  Scala = sum(has_scala, na.rm = TRUE)))
+
+dfm_companies <- melt(df_year, id.vars = "date_year", measure.vars = c("Google", "Facebook", "Twitter", "Microsoft", "Snapchat", "Uber"))
+
+p <- ggplot(dfm_companies, aes(x = date_year, y = value, color = variable, group=variable)) +
+  geom_line() + theme_few() +
+  theme(legend.title = element_blank()) +
+  xlab("Year") + ylab("Num Posts") + ggtitle("Company Mentions by Year")
+ggsave(filename="/tmp/company-mention.png", plot=p)
+
+dfm_languages <- melt(df_year, id.vars = "date_year", measure.vars = c("Java", "Python", "SQL", "JavaScript", "Scala"))
+
+p <- ggplot(dfm_languages, aes(x = date_year, y = value, color = variable, group=variable)) +
+  geom_line() + theme_few() +
+  theme(legend.title = element_blank()) +
+  xlab("Year") + ylab("Num Posts") + ggtitle("Language Mentions by Year")
+ggsave(filename="/tmp/language-mention.png", plot=p)
