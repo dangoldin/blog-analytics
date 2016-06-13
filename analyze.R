@@ -30,7 +30,7 @@ df$date_new <- as.Date(df$date , "%Y-%m-%d")
 df$date_month <- format(df$date_new, "%Y-%m")
 df$date_week <- format(df$date_new, "%Y-%W")
 df$date_year <- format(df$date_new, "%Y")
-df$dow <- weekdays(as.Date(df$date))
+df$dow <- paste(format(df$date_new, "%w"), weekdays(as.Date(df$date))) # deal with sorting later
 
 # From http://www.cookbook-r.com/Graphs/Multiple_graphs_on_one_page_(ggplot2)/
 # Multiple plot function
@@ -79,7 +79,16 @@ multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
   }
 }
 
-plot_by <- function(df, col_names) {
+plot_has <- function(df, str) {
+  str_esc = paste(list(str, "[ \\.]"), collapse='')
+  df$has_str <- grepl(str_esc, df$text, ignore.case = TRUE)  * 1
+  p <- ggplot(df, aes(date_year, has_str)) + geom_bar(stat="identity") +
+    xlab("Year") + ylab(str) + ggtitle(paste(list("Mentions of", str, "by Year"), collapse=" "))
+  ggsave(filename=paste(list("/tmp/mentions-",str,".png"), collapse=''), plot=p)
+}
+
+plot_by <- function(df, col_names, col1lbl, col2lbl) {
+  fn <- paste(col_names, collapse = '-')
   dots <- lapply(col_names, as.symbol)
   by_col_summary <- df %>% group_by_(.dots=dots) %>% summarise(count = n(),
                                                         num_words = sum(num_text_words, na.rm = TRUE),
@@ -96,77 +105,107 @@ plot_by <- function(df, col_names) {
   first_col <- as.String(col_names[1])
   if (length(col_names) > 1) {
     second_col <- as.String(col_names[2])
-    ggplot(by_dow_year_summary, aes_string(x=first_col, y="count", group=second_col, color=second_col)) +
+    p1 <- ggplot(by_col_summary, aes_string(x=first_col, y="count", group=second_col, color=second_col)) +
       geom_line() +
-      theme_few() + scale_colour_few() +
-      theme(axis.text.x = element_text(angle = 90, hjust = 1))
+      theme_few() +
+      theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+      xlab(col1lbl) + ylab(col2lbl) + theme(legend.title = element_blank())
+    p2 <- ggplot(by_col_summary, aes_string(x=second_col, y="count", group=first_col, color=first_col)) +
+      geom_line() +
+      theme_few() +
+      theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+      xlab(col2lbl) + ylab(col1lbl) + theme(legend.title = element_blank())
+    ggsave(filename=paste(list("/tmp/", fn, "-plot1.png"), collapse=''), plot=p1)
+    ggsave(filename=paste(list("/tmp/", fn, "-plot2.png"), collapse=''), plot=p2)
   } else {
-    p1 <- ggplot(by_col_summary, aes_string(first_col, "num_words")) +
+    p1 <- ggplot(by_col_summary, aes_string(first_col, "count")) +
       geom_bar(stat="identity", aes(size = 1), alpha = 1/2) +
       theme_few() + scale_colour_few() +
       theme(legend.position="none") +
-      theme(axis.text.x = element_text(angle = 90, hjust = 1))
-    p2 <- ggplot(by_col_summary, aes_string(first_col, "num_keywords")) +
+      theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+      xlab(col1lbl) + ylab("Num Posts") + ggtitle("Posts over time")
+    p2 <- ggplot(by_col_summary, aes_string(first_col, "num_words")) +
       geom_bar(stat="identity", aes(size = 1), alpha = 1/2) +
       theme_few() + scale_colour_few() +
       theme(legend.position="none") +
-      theme(axis.text.x = element_text(angle = 90, hjust = 1))
+      theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+      xlab(col1lbl) + ylab("Num Words") + ggtitle("Words over time")
     p3 <- ggplot(by_col_summary, aes_string(first_col, "num_links")) +
       geom_bar(stat="identity", aes(size = 1), alpha = 1/2) +
       theme_few() + scale_colour_few() +
       theme(legend.position="none") +
-      theme(axis.text.x = element_text(angle = 90, hjust = 1))
+      theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+      xlab(col1lbl) + ylab("Num Links") + ggtitle("Links over time")
     p4 <- ggplot(by_col_summary, aes_string(first_col, "num_tags")) +
       geom_bar(stat="identity", aes(size = 1), alpha = 1/2) +
       theme_few() + scale_colour_few() +
       theme(legend.position="none") +
-      theme(axis.text.x = element_text(angle = 90, hjust = 1))
-    multiplot(p1, p2, p3, p4, cols=2)
+      theme(axis.text.x = element_text(angle = 90, hjust = 1)) + 
+      xlab(col1lbl) + ylab("Num Tags") + ggtitle("Tags over time")
+    # multiplot(p1, p2, p3, p4, cols=2)
+    ggsave(filename=paste(list("/tmp/", fn, "-plot-count.png"), collapse=''), plot=p1)
+    ggsave(filename=paste(list("/tmp/", fn, "-plot-keywords.png"), collapse=''), plot=p2)
+    ggsave(filename=paste(list("/tmp/", fn, "-plot-links.png"), collapse=''), plot=p3)
+    ggsave(filename=paste(list("/tmp/", fn, "-plot-tags.png"), collapse=''), plot=p4)
   }
 }
 
-plot_by(df, list("date_new"))
-plot_by(df, list("date_week"))
-plot_by(df, list("date_month"))
-plot_by(df, list("dow"))
+plot_wordcloud <- function(text_col, fn) {
+  corpus <- Corpus(VectorSource(text_col))
+  corpus <- tm_map(corpus, PlainTextDocument)
+  corpus <- tm_map(corpus, removePunctuation)
+  corpus <- tm_map(corpus, removeWords, stopwords('english'))
+  # corpus <- tm_map(corpus, stemDocument)
+  corpus <- tm_map(corpus, removeWords, c('the', 'this', stopwords('english')))
+  
+  png(fn, width=8, height=8, units="in", res=300)
+  wordcloud(corpus, max.words = 100, random.order = FALSE, scale=c(1,.5))
+  dev.off()
+}
 
-plot_by(df, list("dow", "date_year"))
-plot_by(df, list("date_year", "dow"))
-
-ggplot(data=df, aes(x=num_images, y=num_links)) +
-  geom_point(size=1) +
-  theme_few() + scale_colour_few()
-
-corpus <- Corpus(VectorSource(df$keywords))
-corpus <- tm_map(corpus, PlainTextDocument)
-corpus <- tm_map(corpus, removePunctuation)
-corpus <- tm_map(corpus, removeWords, stopwords('english'))
-# corpus <- tm_map(corpus, stemDocument)
-corpus <- tm_map(corpus, removeWords, c('the', 'this', stopwords('english')))
-
-wordcloud(corpus, max.words = 100, random.order = FALSE, scale=c(1,.5))
-
-corpus <- Corpus(VectorSource(df$tags))
-corpus <- tm_map(corpus, PlainTextDocument)
-corpus <- tm_map(corpus, removePunctuation)
-corpus <- tm_map(corpus, removeWords, stopwords('english'))
-# corpus <- tm_map(corpus, stemDocument)
-corpus <- tm_map(corpus, removeWords, c('the', 'this', stopwords('english')))
-
-wordcloud(corpus, max.words = 100, random.order = FALSE, scale=c(1.5,0.5))
-
+# General stats
+length(df$text)
+sum(df$num_links)
+sum(df$num_tags)
+sum(df$num_keywords)
+sum(df$num_text_description)
+sum(df$num_text_words)
 
 # Posts over time (day? week? month? year?)
-
-# Words over time
-
-# Links/images over time
+plot_by(df, list("date_new"), "Date", "")
+plot_by(df, list("date_week"), "Week", "")
+plot_by(df, list("date_month"), "Month", "")
+plot_by(df, list("date_year"), "Year", "")
+plot_by(df, list("dow"), "Day of Week", "")
 
 # Correlations between links/images?
+ggplot(data=df, aes(x=num_images, y=num_links)) +
+  geom_point(size=1) +
+  theme_few() + scale_colour_few() +
+  xlab("Num Images") + ylab("Num Links") + ggtitle("Links vs Images")
 
-# Keywords
+# DOW vs Date Year
+plot_by(df, list("dow", "date_year"), "Day of Week", "Year")
+plot_by(df, list("date_year", "dow"), "Year", "Day of Week")
 
-# Avg length over time
+# Word Clouds
+plot_wordcloud(df$keywords, "/tmp/wordcloud")
+plot_wordcloud(df[df$date_year == "2013", ]$keywords, "/tmp/wordcloud_2013.png")
+plot_wordcloud(df[df$date_year == "2014", ]$keywords, "/tmp/wordcloud_2014.png")
+plot_wordcloud(df[df$date_year == "2015", ]$keywords, "/tmp/wordcloud_2015.png")
+plot_wordcloud(df[df$date_year == "2016", ]$keywords, "/tmp/wordcloud_2016.png")
 
-# Day of week
+# Company mentions
+plot_has(df, "Google")
+plot_has(df, "Facebook")
+plot_has(df, "Twitter")
+plot_has(df, "Microsoft")
+plot_has(df, "Uber")
+plot_has(df, "Snapchat")
 
+# Language
+plot_has(df, "Java")
+plot_has(df, "Python")
+plot_has(df, "SQL")
+plot_has(df, "JavaScript")
+plot_has(df, "Scala")
