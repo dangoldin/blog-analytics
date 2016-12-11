@@ -1,0 +1,10 @@
+wordcloud_cli.py --text "data/combined.txt" --imagefile combined.png --height 1600 --width 1600 --relative_scaling 0.5
+wordcloud_cli.py --text "data/combined-2008.txt" --imagefile combined-wordcloud-2008.png --height 1600 --width 1600 --relative_scaling 0.5
+wordcloud_cli.py --text "data/combined-2009.txt" --imagefile combined-wordcloud-2009.png --height 1600 --width 1600 --relative_scaling 0.5
+wordcloud_cli.py --text "data/combined-2010.txt" --imagefile combined-wordcloud-2010.png --height 1600 --width 1600 --relative_scaling 0.5
+wordcloud_cli.py --text "data/combined-2011.txt" --imagefile combined-wordcloud-2011.png --height 1600 --width 1600 --relative_scaling 0.5
+wordcloud_cli.py --text "data/combined-2012.txt" --imagefile combined-wordcloud-2012.png --height 1600 --width 1600 --relative_scaling 0.5
+wordcloud_cli.py --text "data/combined-2013.txt" --imagefile combined-wordcloud-2013.png --height 1600 --width 1600 --relative_scaling 0.5
+wordcloud_cli.py --text "data/combined-2014.txt" --imagefile combined-wordcloud-2014.png --height 1600 --width 1600 --relative_scaling 0.5
+wordcloud_cli.py --text "data/combined-2015.txt" --imagefile combined-wordcloud-2015.png --height 1600 --width 1600 --relative_scaling 0.5
+wordcloud_cli.py --text "data/combined-2016.txt" --imagefile combined-wordcloud-2016.png --height 1600 --width 1600 --relative_scaling 0.5
