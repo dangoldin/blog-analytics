@@ -1,4 +1,4 @@
-#! /usr/bin/python
+#! /usr/bin/env python
 
 # Sample usage:
 # python analyze.py ~/Dropbox/dev/web/dangoldin.github.com/_posts /tmp/out.csv
