@@ -69,9 +69,12 @@ def analyze_post(filename):
     # Get the # of words
     with open(filename, 'r') as f:
         content = f.read()
-        o = analyze_content(content)
-        o['date'] = date
-        return o
+        try:
+            o = analyze_content(content)
+            o['date'] = date
+            return o
+        except Exception, e:
+            print 'Failed processing', filename, e
 
     return {}
 

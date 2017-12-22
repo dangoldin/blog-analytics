@@ -1,16 +1,6 @@
-install.packages("ggplot2")
-install.packages("grid")
-install.packages("gridExtra")
-install.packages("reshape")
-install.packages("scales")
-install.packages("lattice")
-install.packages("ggthemes")
-install.packages("table")
-install.packages("dplyr")
-install.packages("ggthemes")
-install.packages("tm")
-install.packages("SnowballC")
-install.packages("wordcloud")
+list.of.packages <- c("ggplot2","grid","gridExtra","reshape","scales","lattice","ggthemes","table","dplyr","ggthemes","tm","SnowballC","wordcloud")
+new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
+if(length(new.packages)) install.packages(new.packages, repos = "http://cran.us.r-project.org")
 
 library(ggplot2)
 library(grid)
@@ -45,12 +35,12 @@ df$dow <- paste(format(df$date_new, "%w"), weekdays(as.Date(df$date))) # deal wi
 #
 multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
   library(grid)
-  
+
   # Make a list from the ... arguments and plotlist
   plots <- c(list(...), plotlist)
-  
+
   numPlots = length(plots)
-  
+
   # If layout is NULL, then use 'cols' to determine layout
   if (is.null(layout)) {
     # Make the panel
@@ -59,20 +49,20 @@ multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
     layout <- matrix(seq(1, cols * ceiling(numPlots/cols)),
                      ncol = cols, nrow = ceiling(numPlots/cols))
   }
-  
+
   if (numPlots==1) {
     print(plots[[1]])
-    
+
   } else {
     # Set up the page
     grid.newpage()
     pushViewport(viewport(layout = grid.layout(nrow(layout), ncol(layout))))
-    
+
     # Make each plot, in the correct location
     for (i in 1:numPlots) {
       # Get the i,j matrix positions of the regions that contain this subplot
       matchidx <- as.data.frame(which(layout == i, arr.ind = TRUE))
-      
+
       print(plots[[i]], vp = viewport(layout.pos.row = matchidx$row,
                                       layout.pos.col = matchidx$col))
     }
@@ -140,7 +130,7 @@ plot_by <- function(df, col_names, col1lbl, col2lbl) {
       geom_bar(stat="identity", aes(size = 1), alpha = 1/2) +
       theme_few() + scale_colour_few() +
       theme(legend.position="none") +
-      theme(axis.text.x = element_text(angle = 90, hjust = 1)) + 
+      theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
       xlab(col1lbl) + ylab("Num Tags") + ggtitle("Tags over time")
     # multiplot(p1, p2, p3, p4, cols=2)
     ggsave(filename=paste(list("/tmp/", fn, "-plot-count.png"), collapse=''), plot=p1)
@@ -157,7 +147,9 @@ plot_wordcloud <- function(text_col, fn) {
   corpus <- tm_map(corpus, removeWords, stopwords('english'))
   # corpus <- tm_map(corpus, stemDocument)
   corpus <- tm_map(corpus, removeWords, c('the', 'this', stopwords('english')))
-  
+  corpus <- iconv(corpus, to = "utf-8")
+  corpus <- (corpus[!is.na(corpus)])
+
   png(fn, width=2, height=2, units="in", res=300)
   wordcloud(corpus, max.words = 100, random.order = FALSE, scale=c(1,.5))
   dev.off()
@@ -179,20 +171,26 @@ plot_by(df, list("date_year"), "Year", "")
 plot_by(df, list("dow"), "Day of Week", "")
 
 # Correlations between links/images?
-ggplot(data=df, aes(x=num_images, y=num_links)) +
+links_vs_images <- ggplot(data=df, aes(x=num_images, y=num_links)) +
   geom_point(size=1) +
   theme_few() + scale_colour_few() +
   xlab("Num Images") + ylab("Num Links") + ggtitle("Links vs Images")
+
+ggsave(filename="/tmp/links-vs-images.png", plot=links_vs_images)
 
 # DOW vs Date Year
 plot_by(df, list("dow", "date_year"), "Day of Week", "Year")
 
 # Word Clouds
+# TODO: Make this variable
 plot_wordcloud(df$keywords, "/tmp/wordcloud.png")
 plot_wordcloud(df[df$date_year == "2013", ]$keywords, "/tmp/wordcloud_2013.png")
 plot_wordcloud(df[df$date_year == "2014", ]$keywords, "/tmp/wordcloud_2014.png")
 plot_wordcloud(df[df$date_year == "2015", ]$keywords, "/tmp/wordcloud_2015.png")
 plot_wordcloud(df[df$date_year == "2016", ]$keywords, "/tmp/wordcloud_2016.png")
+plot_wordcloud(df[df$date_year == "2017", ]$keywords, "/tmp/wordcloud_2017.png")
+
+# TODO: Drive company and language from single list
 
 # Company mentions
 plot_has(df, "Google")
@@ -201,6 +199,9 @@ plot_has(df, "Twitter")
 plot_has(df, "Microsoft")
 plot_has(df, "Uber")
 plot_has(df, "Snapchat")
+plot_has(df, "Tesla")
+plot_has(df, "Lyft")
+plot_has(df, "Apple")
 
 # Language
 plot_has(df, "Java")
@@ -216,6 +217,9 @@ df$has_twitter <- grepl("Twitter[ \\.]", df$text, ignore.case = TRUE)  * 1
 df$has_microsoft <- grepl("Microsoft[ \\.]", df$text, ignore.case = TRUE)  * 1
 df$has_uber <- grepl("Uber[ \\.]", df$text, ignore.case = TRUE)  * 1
 df$has_snapchat <- grepl("Snapchat[ \\.]", df$text, ignore.case = TRUE)  * 1
+df$has_tesla <- grepl("Tesla[ \\.]", df$text, ignore.case = TRUE)  * 1
+df$has_lyft <- grepl("Lyft[ \\.]", df$text, ignore.case = TRUE)  * 1
+df$has_apple <- grepl("Apple[ \\.]", df$text, ignore.case = TRUE)  * 1
 
 # Language mentions
 df$has_java <- grepl("Java[ \\.]", df$text, ignore.case = TRUE)  * 1
@@ -230,13 +234,16 @@ df_year <- as.data.frame(df %>% group_by(date_year) %>% summarise(Google = sum(h
                                                                   Microsoft = sum(has_microsoft, na.rm = TRUE),
                                                                   Snapchat = sum(has_snapchat, na.rm = TRUE),
                                                                   Uber = sum(has_uber, na.rm = TRUE),
+                                                                  Lyft = sum(has_lyft, na.rm = TRUE),
+                                                                  Tesla = sum(has_tesla, na.rm = TRUE),
+                                                                  Apple = sum(has_apple, na.rm = TRUE),
                                                                   Java = sum(has_java, na.rm = TRUE),
                                                                   Python = sum(has_python, na.rm = TRUE),
                                                                   SQL = sum(has_sql, na.rm = TRUE),
                                                                   JavaScript = sum(has_javascript, na.rm = TRUE),
                                                                   Scala = sum(has_scala, na.rm = TRUE)))
 
-dfm_companies <- melt(df_year, id.vars = "date_year", measure.vars = c("Google", "Facebook", "Twitter", "Microsoft", "Snapchat", "Uber"))
+dfm_companies <- melt(df_year, id.vars = "date_year", measure.vars = c("Google", "Facebook", "Twitter", "Microsoft", "Snapchat", "Uber", "Tesla", "Lyft", "Apple"))
 
 p <- ggplot(dfm_companies, aes(x = date_year, y = value, color = variable, group=variable)) +
   geom_line() + theme_few() +
