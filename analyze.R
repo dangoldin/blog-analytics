@@ -189,6 +189,7 @@ plot_wordcloud(df[df$date_year == "2014", ]$keywords, "/tmp/wordcloud_2014.png")
 plot_wordcloud(df[df$date_year == "2015", ]$keywords, "/tmp/wordcloud_2015.png")
 plot_wordcloud(df[df$date_year == "2016", ]$keywords, "/tmp/wordcloud_2016.png")
 plot_wordcloud(df[df$date_year == "2017", ]$keywords, "/tmp/wordcloud_2017.png")
+plot_wordcloud(df[df$date_year == "2018", ]$keywords, "/tmp/wordcloud_2018.png")
 
 # TODO: Drive company and language from single list
 

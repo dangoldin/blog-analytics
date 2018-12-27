@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 
 # Sample usage:
-# python analyze.py ~/Dropbox/dev/web/dangoldin.github.com/_posts /tmp/out.csv
+# python analyze.py ~/code/dangoldin.github.com/_posts /tmp/out.csv
 
 import os, sys, json, re, csv
 
