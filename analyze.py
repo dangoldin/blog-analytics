@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 
 # Sample usage:
-# python analyze.py ~/code/dangoldin.github.com/_posts /tmp/out.csv
+# python analyze.py ~/code/dangoldin.github.com/_posts /tmp/out.csv text
 
 import os, sys, json, re, csv
 
@@ -20,6 +20,11 @@ def get_date(filename):
     f = filename.split('/')[-1]
     pieces = f.split('-')
     return '-'.join(pieces[:3])
+
+def get_slug(filename):
+    f = filename.replace('.md','').split('/')[-1]
+    pieces = f.split('-')
+    return '-'.join(pieces[3:])
 
 def count_words(text):
     return len(RE_CLEAN_TEXT.split(text))
@@ -48,12 +53,15 @@ def analyze_content(content):
 
     text = content.split('---')[-1].replace('{% include JB/setup %}', '').strip("\n")
 
+    clean_text = RE_HTML.sub(' ', text.replace("\n", ' ')).strip()
+
     return {
         'title': title,
         'tags': ','.join(tags),
         'keywords': keywords,
         'description': description,
-        'text': RE_HTML.sub(' ', text.replace("\n", ' ')).strip(),
+        'text': clean_text,
+        'num_chars': len(clean_text),
         'num_text_words': count_words(text),
         'num_text_description': count_words(description),
         'num_keywords': len(keywords.split(',')),
@@ -63,8 +71,8 @@ def analyze_content(content):
     }
 
 def analyze_post(filename):
-    # Get the date
     date = get_date(filename)
+    slug = get_slug(filename)
 
     # Get the # of words
     with open(filename, 'r') as f:
@@ -72,27 +80,35 @@ def analyze_post(filename):
         try:
             o = analyze_content(content)
             o['date'] = date
+            o['slug'] = slug
             return o
-        except Exception, e:
-            print 'Failed processing', filename, e
+        except Exception as e:
+            print('Failed processing', filename, e)
 
     return {}
 
-def write_csv(analysis, outfile):
+def write_csv(analysis, outfile, columns):
     with open(outfile, 'w') as f:
-        c = csv.DictWriter(f, analysis[0].keys())
+        # Ignore custom columns not matching dictionary
+        c = csv.DictWriter(f, columns, extrasaction='ignore')
         c.writeheader()
         c.writerows(analysis)
 
 if __name__ == '__main__':
-    if len(sys.argv) != 3:
-        print 'Specify directory to analyze and location of outfile'
+    if len(sys.argv) < 3:
+        print('Specify directory to analyze and location of outfile')
         exit(1)
 
     dirname, outfile = sys.argv[1], sys.argv[2]
+
+    columns_to_exclude = []
+    if len(sys.argv) == 4:
+        columns_to_exclude = sys.argv[3].split(',')
 
     posts = get_posts(dirname)
 
     analysis = [analyze_post(os.path.join(dirname, p)) for p in posts]
 
-    write_csv(analysis, outfile)
+    columns = [x for x in list(analysis[0].keys()) if x not in columns_to_exclude]
+
+    write_csv(analysis, outfile, columns)
