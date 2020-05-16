@@ -79,7 +79,7 @@ def analyze_post(filename):
         content = f.read()
         try:
             o = analyze_content(content)
-            o['date'] = date
+            o['ymd'] = date
             o['slug'] = slug
             return o
         except Exception as e:
@@ -90,7 +90,7 @@ def analyze_post(filename):
 def write_csv(analysis, outfile, columns):
     with open(outfile, 'w') as f:
         # Ignore custom columns not matching dictionary
-        c = csv.DictWriter(f, columns, extrasaction='ignore')
+        c = csv.DictWriter(f, columns, extrasaction='ignore', delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
         c.writeheader()
         c.writerows(analysis)
 
@@ -109,6 +109,8 @@ if __name__ == '__main__':
 
     analysis = [analyze_post(os.path.join(dirname, p)) for p in posts]
 
-    columns = [x for x in list(analysis[0].keys()) if x not in columns_to_exclude]
+    column_order = """title,tags,keywords,description,num_chars,num_text_words,num_text_description,num_keywords,num_tags,num_images,num_links,ymd,slug""".split(',')
+
+    columns = [x for x in column_order if x not in columns_to_exclude]
 
     write_csv(analysis, outfile, columns)
