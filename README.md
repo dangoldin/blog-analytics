@@ -4,6 +4,6 @@ I run a Jekyll blog at [http://dangoldin.com](http://dangoldin.com) and have bee
 
 The Python scripts goes through the entire directory and the R script provides some visualization.
 
-{% highlight %}
+```
 python analyze.py ~/code/blog.dangoldin.com/_posts /tmp/out.csv text
-{% endhighlight %}
+```
