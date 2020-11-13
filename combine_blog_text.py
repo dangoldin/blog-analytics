@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 
-import sys, csv
+import sys
+import csv
 from collections import defaultdict
 
 if __name__ == '__main__':

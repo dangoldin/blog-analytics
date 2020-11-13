@@ -3,7 +3,11 @@
 # Sample usage:
 # python analyze.py ~/code/dangoldin.github.com/_posts /tmp/out.csv text
 
-import os, sys, json, re, csv
+import os
+import sys
+import json
+import re
+import csv
 
 # TODO: Just use string.punctuation
 RE_CLEAN_TEXT = re.compile('[\s\.\-\?]+')
