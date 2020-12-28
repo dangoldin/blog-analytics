@@ -109,7 +109,7 @@ if __name__ == '__main__':
 
     analysis = [analyze_post(os.path.join(dirname, p)) for p in posts]
 
-    column_order = """title,tags,keywords,description,num_chars,num_text_words,num_text_description,num_keywords,num_tags,num_images,num_links,ymd,slug""".split(',')
+    column_order = """title,tags,keywords,description,num_chars,num_text_words,num_text_description,num_keywords,num_tags,num_images,num_links,ymd,slug,text""".split(',')
 
     columns = [x for x in column_order if x not in columns_to_exclude]
 

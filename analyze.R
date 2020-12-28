@@ -15,8 +15,8 @@ library(tm)
 library(SnowballC)
 library(wordcloud)
 
-df = read.csv("/tmp/out.csv", header=TRUE)
-df$date_new <- as.Date(df$date , "%Y-%m-%d")
+df = read.csv("/tmp/out-full.csv", header=TRUE)
+df$date_new <- as.Date(df$ymd , "%Y-%m-%d")
 df$date_month <- format(df$date_new, "%Y-%m")
 df$date_week <- format(df$date_new, "%Y-%W")
 df$date_year <- format(df$date_new, "%Y")
@@ -190,6 +190,8 @@ plot_wordcloud(df[df$date_year == "2015", ]$keywords, "/tmp/wordcloud_2015.png")
 plot_wordcloud(df[df$date_year == "2016", ]$keywords, "/tmp/wordcloud_2016.png")
 plot_wordcloud(df[df$date_year == "2017", ]$keywords, "/tmp/wordcloud_2017.png")
 plot_wordcloud(df[df$date_year == "2018", ]$keywords, "/tmp/wordcloud_2018.png")
+plot_wordcloud(df[df$date_year == "2019", ]$keywords, "/tmp/wordcloud_2019.png")
+plot_wordcloud(df[df$date_year == "2020", ]$keywords, "/tmp/wordcloud_2020.png")
 
 # TODO: Drive company and language from single list
 

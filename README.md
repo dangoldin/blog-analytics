@@ -5,7 +5,11 @@ I run a Jekyll blog at [http://dangoldin.com](http://dangoldin.com) and have bee
 The Python scripts goes through the entire directory and the R script provides some visualization.
 
 ```
-python analyze.py ~/code/blog.dangoldin.com/_posts /tmp/out.csv text
+# For simple CSV without the actual text. I load this into MySQL for analysis. 
+~ python analyze.py ~/code/blog.dangoldin.com/_posts /tmp/out.csv text
+
+# To feed into the analyze.R script.
+~ python analyze.py ~/code/blog.dangoldin.com/_posts /tmp/out-full.csv
 ```
 
 ## Queries
