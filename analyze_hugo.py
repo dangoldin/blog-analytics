@@ -54,18 +54,18 @@ def count_links(text):
 def analyze_content(content):
     metadata_text = content.split("---\n")[1]
     metadata = yaml.safe_load(metadata_text)
-    
-    title = metadata['title']
-    keywords = metadata.get('keywords','')
-    description = metadata['description']
-    tags = metadata['tags']
+
+    title = metadata["title"]
+    keywords = metadata.get("keywords", "")
+    description = metadata["description"]
+    tags = metadata["tags"]
 
     if title is None:
-        title = ''
+        title = ""
     if keywords is None:
-        keywords = ''
+        keywords = ""
     if description is None:
-        description = ''
+        description = ""
     if tags is None:
         tags = []
 
