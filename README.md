@@ -1,15 +1,19 @@
 # Blog Analysis
 
-I run a Jekyll blog at [http://dangoldin.com](http://dangoldin.com) and have been blogging actively since 2013 and this is my attempt to track and analyze my writing over time.
+I run a blog at [http://dangoldin.com](http://dangoldin.com) and have been blogging actively since 2013 and this is my attempt to track and analyze my writing over time.
 
 The Python scripts goes through the entire directory and the R script provides some visualization.
 
+In the past I used Jekyll which can be parsed with the analyze_jekyll.py script. More recently I moved the blog to Hugo which requires the analyze_hugo.py script.
+
 ```
 # For simple CSV without the actual text. I load this into MySQL for analysis. 
-~ python analyze.py ~/code/blog.dangoldin.com/_posts /tmp/out.csv text
+~ python analyze_jekyll.py ~/code/blog.dangoldin.com/_posts /tmp/out.csv text
+~ python analyze_hugo.py ~/code/blog.dangoldin.com/content/blog /tmp/out.csv text
 
 # To feed into the analyze.R script.
-~ python analyze.py ~/code/blog.dangoldin.com/_posts /tmp/out-full.csv
+~ python analyze_jekyll.py ~/code/blog.dangoldin.com/_posts /tmp/out-full.csv
+~ python analyze_hugo.py ~/code/blog.dangoldin.com/content/blog /tmp/out-full.csv
 ```
 
 ## Queries
